@@ -5,6 +5,7 @@ import static org.stellar.anchor.event.models.TransactionEvent.Type.TRANSACTION_
 import static org.stellar.anchor.sep31.Sep31Helper.allAmountAvailable;
 import static org.stellar.anchor.util.MathHelper.decimal;
 import static org.stellar.anchor.util.MathHelper.equalsAsDecimals;
+import static org.stellar.anchor.util.MemoHelper.makeMemo;
 
 import io.micrometer.core.instrument.Metrics;
 import java.time.Instant;
@@ -37,6 +38,7 @@ import org.stellar.anchor.sep38.Sep38QuoteStore;
 import org.stellar.anchor.util.Log;
 import org.stellar.anchor.util.SepHelper;
 import org.stellar.anchor.util.StringHelper;
+import org.stellar.sdk.MemoNone;
 
 public class TransactionService {
   private final Sep38QuoteStore quoteStore;
@@ -175,7 +177,10 @@ public class TransactionService {
             || !Objects.equals(txn.getAmountInAsset(), patch.getAmountIn().getAsset()))) {
       validateAsset("amount_in", patch.getAmountIn());
       txn.setAmountIn(patch.getAmountIn().getAmount());
-      txn.setAmountInAsset(patch.getAmountIn().getAsset());
+
+      if (patch.getAmountIn().getAsset() != null) {
+        txn.setAmountInAsset(patch.getAmountIn().getAsset());
+      }
       txWasUpdated = true;
     }
 
@@ -184,7 +189,10 @@ public class TransactionService {
             || !Objects.equals(txn.getAmountOutAsset(), patch.getAmountOut().getAsset()))) {
       validateAsset("amount_out", patch.getAmountOut());
       txn.setAmountOut(patch.getAmountOut().getAmount());
-      txn.setAmountOutAsset(patch.getAmountOut().getAsset());
+
+      if (patch.getAmountOut().getAsset() != null) {
+        txn.setAmountOutAsset(patch.getAmountOut().getAsset());
+      }
       txWasUpdated = true;
     }
 
@@ -193,7 +201,10 @@ public class TransactionService {
             || !Objects.equals(txn.getAmountFeeAsset(), patch.getAmountFee().getAsset()))) {
       validateAsset("amount_fee", patch.getAmountFee());
       txn.setAmountFee(patch.getAmountFee().getAmount());
-      txn.setAmountFeeAsset(patch.getAmountFee().getAsset());
+
+      if (patch.getAmountFee().getAsset() != null) {
+        txn.setAmountFeeAsset(patch.getAmountFee().getAsset());
+      }
       txWasUpdated = true;
     }
 
@@ -235,6 +246,25 @@ public class TransactionService {
             txWasUpdated = true;
           }
         }
+
+        if (patch.getStellarTransactionId() != null
+            && !Objects.equals(txn.getStellarTransactionId(), patch.getStellarTransactionId())) {
+          txn.setStellarTransactionId(patch.getStellarTransactionId());
+          txWasUpdated = true;
+        }
+
+        if (!(makeMemo(patch.getMemo(), patch.getMemoType()) instanceof MemoNone)) {
+          sep24Txn.setMemo(patch.getMemo());
+          sep24Txn.setMemoType(patch.getMemoType());
+        }
+
+        if (patch.getWithdrawalAnchorAccount() != null
+            && !Objects.equals(
+                sep24Txn.getWithdrawAnchorAccount(), patch.getWithdrawalAnchorAccount())) {
+          sep24Txn.setWithdrawAnchorAccount(patch.getWithdrawalAnchorAccount());
+          txWasUpdated = true;
+        }
+
         break;
       case "31":
         JdbcSep31Transaction sep31Txn = (JdbcSep31Transaction) txn;
@@ -286,6 +316,10 @@ public class TransactionService {
 
     // asset amount needs to be non-empty and valid
     SepHelper.validateAmount(fieldName + ".", amount.getAmount());
+
+    if (amount.getAsset() == null) {
+      return;
+    }
 
     // asset name cannot be empty
     if (StringHelper.isEmpty(amount.getAsset())) {
@@ -455,6 +489,9 @@ public class TransactionService {
         .refunds(refunds)
         .stellarTransactions(txn.getStellarTransactions())
         .externalTransactionId(txn.getExternalTransactionId())
+        .toAccount(txn.getToAccount())
+        .requestAssetCode(txn.getRequestAssetCode())
+        .requestAssetIssuer(txn.getRequestAssetIssuer())
         .build();
   }
 }

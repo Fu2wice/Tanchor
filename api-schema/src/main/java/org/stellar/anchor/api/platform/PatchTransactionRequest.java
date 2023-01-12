@@ -30,4 +30,16 @@ public class PatchTransactionRequest {
 
   @SerializedName("external_transaction_id")
   String externalTransactionId;
+
+  @SerializedName("stellar_transaction_id")
+  String stellarTransactionId;
+
+  @SerializedName("memo")
+  String memo;
+
+  @SerializedName("memo_type")
+  String memoType;
+
+  @SerializedName("withdrawal_anchor_account")
+  String withdrawalAnchorAccount;
 }

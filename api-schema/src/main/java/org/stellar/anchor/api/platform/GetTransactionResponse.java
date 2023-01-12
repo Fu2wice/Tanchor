@@ -58,4 +58,13 @@ public class GetTransactionResponse {
 
   Customers customers;
   StellarId creator;
+
+  @SerializedName("to_account")
+  String toAccount;
+
+  @SerializedName("request_asset_code")
+  String requestAssetCode;
+
+  @SerializedName("request_asset_issuer")
+  String requestAssetIssuer;
 }
