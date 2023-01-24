@@ -37,7 +37,7 @@ class AnchorPlatformIntegrationTest {
 
       ServiceRunner.startSepServer(envMap)
       ServiceRunner.startStellarObserver(envMap)
-      ServiceRunner.startAnchorReferenceServer()
+      ServiceRunner.startAnchorReferenceServer(false)
 
       toml =
         Sep1Helper.parse(
